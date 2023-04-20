@@ -1,5 +1,9 @@
 
 
+"""
+Creates a Pytorch dataset to load the Pascal VOC & MS COCO datasets
+"""
+
 import config
 import numpy as np
 import os
@@ -8,7 +12,7 @@ import torch
 
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset, DataLoader
-from cv_utils import (
+from utils import (
     cells_to_bboxes,
     iou_width_height as iou,
     non_max_suppression as nms,
@@ -55,13 +59,13 @@ class YOLODataset(Dataset):
             image = augmentations["image"]
             bboxes = augmentations["bboxes"]
 
-        
+        # Below assumes 3 scale predictions (as paper) and same num of anchors per scale
         targets = [torch.zeros((self.num_anchors // 3, S, S, 6)) for S in self.S]
         for box in bboxes:
             iou_anchors = iou(torch.tensor(box[2:4]), self.anchors)
             anchor_indices = iou_anchors.argsort(descending=True, dim=0)
             x, y, width, height, class_label = box
-            has_anchor = [False] * 3  
+            has_anchor = [False] * 3  # each scale should have one anchor
             for anchor_idx in anchor_indices:
                 scale_idx = anchor_idx // self.num_anchors_per_scale
                 anchor_on_scale = anchor_idx % self.num_anchors_per_scale
