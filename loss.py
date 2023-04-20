@@ -1,9 +1,13 @@
-
+"""
+Implementation of Yolo Loss Function similar to the one in Yolov3 paper,
+the difference from what I can tell is I use CrossEntropy for the classes
+instead of BinaryCrossEntropy.
+"""
 import random
 import torch
 import torch.nn as nn
 
-from cv_utils import intersection_over_union
+from utils import intersection_over_union
 
 
 class YoloLoss(nn.Module):
@@ -14,16 +18,16 @@ class YoloLoss(nn.Module):
         self.entropy = nn.CrossEntropyLoss()
         self.sigmoid = nn.Sigmoid()
 
-        
+        # Constants signifying how much to pay for each respective part of the loss
         self.lambda_class = 1
         self.lambda_noobj = 10
         self.lambda_obj = 1
         self.lambda_box = 10
 
     def forward(self, predictions, target, anchors):
-        
-        obj = target[..., 0] == 1  
-        noobj = target[..., 0] == 0  
+        # Check where obj and noobj (we ignore if target == -1)
+        obj = target[..., 0] == 1  # in paper this is Iobj_i
+        noobj = target[..., 0] == 0  # in paper this is Inoobj_i
 
         # ======================= #
         #   FOR NO OBJECT LOSS    #
