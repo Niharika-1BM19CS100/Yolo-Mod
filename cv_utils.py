@@ -12,7 +12,13 @@ from tqdm import tqdm
 
 
 def iou_width_height(boxes1, boxes2):
-
+    """
+    Parameters:
+        boxes1 (tensor): width and height of the first bounding boxes
+        boxes2 (tensor): width and height of the second bounding boxes
+    Returns:
+        tensor: Intersection over union of the corresponding boxes
+    """
     intersection = torch.min(boxes1[..., 0], boxes2[..., 0]) * torch.min(
         boxes1[..., 1], boxes2[..., 1]
     )
@@ -23,7 +29,21 @@ def iou_width_height(boxes1, boxes2):
 
 
 def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
+    """
+    Video explanation of this function:
+    https://youtu.be/XXYG5ZWtjj0
 
+    This function calculates intersection over union (iou) given pred boxes
+    and target boxes.
+
+    Parameters:
+        boxes_preds (tensor): Predictions of Bounding Boxes (BATCH_SIZE, 4)
+        boxes_labels (tensor): Correct labels of Bounding Boxes (BATCH_SIZE, 4)
+        box_format (str): midpoint/corners, if boxes (x,y,w,h) or (x1,y1,x2,y2)
+
+    Returns:
+        tensor: Intersection over union for all examples
+    """
 
     if box_format == "midpoint":
         box1_x1 = boxes_preds[..., 0:1] - boxes_preds[..., 2:3] / 2
@@ -58,6 +78,22 @@ def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
 
 
 def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
+    """
+    Video explanation of this function:
+    https://youtu.be/YDkjWEN8jNA
+
+    Does Non Max Suppression given bboxes
+
+    Parameters:
+        bboxes (list): list of lists containing all bboxes with each bboxes
+        specified as [class_pred, prob_score, x1, y1, x2, y2]
+        iou_threshold (float): threshold where predicted bboxes is correct
+        threshold (float): threshold to remove predicted bboxes (independent of IoU)
+        box_format (str): "midpoint" or "corners" used to specify bboxes
+
+    Returns:
+        list: bboxes after performing NMS given a specific IoU threshold
+    """
 
     assert type(bboxes) == list
 
@@ -86,9 +122,25 @@ def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
 
 
 def mean_average_precision(
-    pred_boxes, true_boxes, iou_threshold=0.5, box_format="midpoint", num_classes=6
+    pred_boxes, true_boxes, iou_threshold=0.5, box_format="midpoint", num_classes=20
 ):
+    """
+    Video explanation of this function:
+    https://youtu.be/FppOzcDvaDI
 
+    This function calculates mean average precision (mAP)
+
+    Parameters:
+        pred_boxes (list): list of lists containing all bboxes with each bboxes
+        specified as [train_idx, class_prediction, prob_score, x1, y1, x2, y2]
+        true_boxes (list): Similar as pred_boxes except all the correct ones
+        iou_threshold (float): threshold where predicted bboxes is correct
+        box_format (str): "midpoint" or "corners" used to specify bboxes
+        num_classes (int): number of classes
+
+    Returns:
+        float: mAP value across all classes given a specific IoU threshold
+    """
 
     # list storing all AP for respective classes
     average_precisions = []
@@ -111,10 +163,16 @@ def mean_average_precision(
             if true_box[1] == c:
                 ground_truths.append(true_box)
 
-
+        # find the amount of bboxes for each training example
+        # Counter here finds how many ground truth bboxes we get
+        # for each training example, so let's say img 0 has 3,
+        # img 1 has 5 then we will obtain a dictionary with:
+        # amount_bboxes = {0:3, 1:5}
         amount_bboxes = Counter([gt[0] for gt in ground_truths])
 
-
+        # We then go through each key, val in this dictionary
+        # and convert to the following (w.r.t same example):
+        # ammount_bboxes = {0:torch.tensor[0,0,0], 1:torch.tensor[0,0,0,0,0]}
         for key, val in amount_bboxes.items():
             amount_bboxes[key] = torch.zeros(val)
 
@@ -175,6 +233,7 @@ def mean_average_precision(
 
 
 def plot_image(image, boxes):
+    """Plots predicted bounding boxes on the image"""
     cmap = plt.get_cmap("tab20b")
     class_labels = config.COCO_LABELS if config.DATASET=='COCO' else config.PASCAL_CLASSES
     colors = [cmap(i) for i in np.linspace(0, 1, len(class_labels))]
@@ -276,7 +335,19 @@ def get_evaluation_bboxes(
 
 
 def cells_to_bboxes(predictions, anchors, S, is_preds=True):
-
+    """
+    Scales the predictions coming from the model to
+    be relative to the entire image such that they for example later
+    can be plotted or.
+    INPUT:
+    predictions: tensor of size (N, 3, S, S, num_classes+5)
+    anchors: the anchors used for the predictions
+    S: the number of cells the image is divided in on the width (and height)
+    is_preds: whether the input is predictions or the true bounding boxes
+    OUTPUT:
+    converted_bboxes: the converted boxes of sizes (N, num_anchors, S, S, 1+5) with class index,
+                      object score, bounding box coordinates
+    """
     BATCH_SIZE = predictions.shape[0]
     num_anchors = len(anchors)
     box_predictions = predictions[..., 1:5]
@@ -365,6 +436,8 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
 
+    # If we don't do this then it will just have learning rate of old checkpoint
+    # and it will lead to many hours of debugging \:
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
 
