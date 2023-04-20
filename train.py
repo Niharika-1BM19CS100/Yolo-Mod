@@ -1,12 +1,14 @@
-
+"""
+Main file for training Yolo model on Pascal VOC and COCO dataset
+"""
 
 import config
 import torch
 import torch.optim as optim
-import os
+
 from model import YOLOv3
 from tqdm import tqdm
-from cv_utils import (
+from utils import (
     mean_average_precision,
     cells_to_bboxes,
     get_evaluation_bboxes,
@@ -22,7 +24,7 @@ warnings.filterwarnings("ignore")
 
 torch.backends.cudnn.benchmark = True
 
-path = os.getcwd()
+
 def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
     loop = tqdm(train_loader, leave=True)
     losses = []
@@ -81,7 +83,7 @@ def main():
         train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
 
         #if config.SAVE_MODEL:
-            #save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
+        #    save_checkpoint(model, optimizer, filename=f"checkpoint.pth.tar")
 
         #print(f"Currently epoch {epoch}")
         #print("On Train Eval loader:")
@@ -97,14 +99,15 @@ def main():
                 anchors=config.ANCHORS,
                 threshold=config.CONF_THRESHOLD,
             )
-            #mapval = mean_average_precision(
-            #    pred_boxes,
-            #    true_boxes,
-            #    iou_threshold=config.MAP_IOU_THRESH,
-            #    box_format="midpoint",
-            #    num_classes=config.NUM_CLASSES,
-            #)
-            #print(f"MAP: {mapval.item()}")
+            mapval = mean_average_precision(
+                pred_boxes,
+                true_boxes,
+                iou_threshold=config.MAP_IOU_THRESH,
+                box_format="midpoint",
+                num_classes=config.NUM_CLASSES,
+            )
+            print(f"MAP: {mapval.item()}")
+            model.train()
 
 
 if __name__ == "__main__":
