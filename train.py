@@ -97,14 +97,14 @@ def main():
                 anchors=config.ANCHORS,
                 threshold=config.CONF_THRESHOLD,
             )
-            mapval = mean_average_precision(
-                pred_boxes,
-                true_boxes,
-                iou_threshold=config.MAP_IOU_THRESH,
-                box_format="midpoint",
-                num_classes=config.NUM_CLASSES,
-            )
-            print(f"MAP: {mapval.item()}")
+            #mapval = mean_average_precision(
+            #    pred_boxes,
+            #    true_boxes,
+            #    iou_threshold=config.MAP_IOU_THRESH,
+            #    box_format="midpoint",
+            #    num_classes=config.NUM_CLASSES,
+            #)
+            #print(f"MAP: {mapval.item()}")
 
 
 if __name__ == "__main__":
