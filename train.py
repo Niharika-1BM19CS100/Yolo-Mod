@@ -79,7 +79,7 @@ def main():
     ).to(config.DEVICE)
 
     for epoch in range(config.NUM_EPOCHS):
-        plot_couple_examples(model, test_loader, 0.6, 0.5, scaled_anchors)
+        #plot_couple_examples(model, test_loader, 0.6, 0.5, scaled_anchors)
         train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors)
 
         if config.SAVE_MODEL:
