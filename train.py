@@ -69,10 +69,10 @@ def main():
         train_csv_path=config.DATASET + "/train.csv", test_csv_path=config.DATASET + "/test.csv"
     )
 
-    # if config.LOAD_MODEL:
-    #     load_checkpoint(
-    #         config.CHECKPOINT_FILE, model, optimizer, config.LEARNING_RATE
-    #     )
+     if config.LOAD_MODEL:
+         load_checkpoint(
+             config.CHECKPOINT_FILE, model, optimizer, config.LEARNING_RATE
+         )
 
     scaled_anchors = (
         torch.tensor(config.ANCHORS)
@@ -100,14 +100,14 @@ def main():
         #         anchors=config.ANCHORS,
         #         threshold=config.CONF_THRESHOLD,
         #     )
-            # mapval = mean_average_precision(
-            #     pred_boxes,
-            #     true_boxes,
-            #     iou_threshold=config.MAP_IOU_THRESH,
-            #     box_format="midpoint",
-            #     num_classes=config.NUM_CLASSES,
-            # )
-            # print(f"MAP: {mapval.item()}")
+             mapval = mean_average_precision(
+                 pred_boxes,
+                 true_boxes,
+                 iou_threshold=config.MAP_IOU_THRESH,
+                 box_format="midpoint",
+                 num_classes=config.NUM_CLASSES,
+             )
+             print(f"MAP: {mapval.item()}")
 
 
 if __name__ == "__main__":
