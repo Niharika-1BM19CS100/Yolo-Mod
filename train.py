@@ -103,7 +103,7 @@ def main():
                 pred_boxes,
                 true_boxes,
                 iou_threshold=config.MAP_IOU_THRESH,
-                #box_format="midpoint",
+                box_format="midpoint",
                 num_classes=config.NUM_CLASSES,
             )
             print(f"MAP: {mapval.item()}")
